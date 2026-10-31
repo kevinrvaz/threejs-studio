@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx src/main.ts",
-    "start": "tsx src/main.ts",
+    "start": "node --env-file=.env --import tsx src/main.ts",
     "check": "tsc --noEmit",
     "test": "tsx --test test/**/*.test.ts"
   },
