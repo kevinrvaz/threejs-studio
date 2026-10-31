@@ -69,6 +69,7 @@ export const useStudio = create<State>((set, get) => ({
     if (JSON.stringify(p) === JSON.stringify(s.project)) return;
     set({
       project: p,
+      selected: s.selected.filter((id) => p.nodes.some((n) => n.id === id)),
       past: [...s.past.slice(-79), s.project],
       future: [],
       revision: s.revision + 1,

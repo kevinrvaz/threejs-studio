@@ -71,6 +71,12 @@ export function Viewport({ onFiles }: { onFiles: (files: File[]) => void }) {
       disposed = false,
       dirty = true,
       frame = 0;
+    // Wheel zoom updates OrbitControls immediately, before the animation loop's
+    // update() can detect it. Invalidate on every control change as well.
+    const invalidate = () => {
+      dirty = true;
+    };
+    orbit.addEventListener('change', invalidate);
     const ray = new THREE.Raycaster(),
       pointer = new THREE.Vector2();
     const down = new THREE.Vector2();
@@ -149,7 +155,7 @@ export function Viewport({ onFiles }: { onFiles: (files: File[]) => void }) {
         }
       });
       roots = selectionRoots(state.project.nodes, state.selected).filter(
-        (id) => !isLocked(state.project.nodes, id),
+        (id) => objects.has(id) && !isLocked(state.project.nodes, id),
       );
       if (roots.length && !state.preview) {
         const center = new THREE.Vector3();
@@ -452,6 +458,7 @@ export function Viewport({ onFiles }: { onFiles: (files: File[]) => void }) {
       cancelAnimationFrame(frame);
       observer.disconnect();
       unsubscribe();
+      orbit.removeEventListener('change', invalidate);
       orbit.dispose();
       transform.dispose();
       clearHelpers();

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AgentPanel } from './AgentPanel';
 import type { CSSProperties, ReactNode } from 'react';
 import {
   Box,
@@ -1027,6 +1028,7 @@ export default function App() {
     [addMenu, setAddMenu] = useState(false),
     [exportMenu, setExportMenu] = useState(false),
     [assetsOpen, setAssetsOpen] = useState(true);
+  const [agentOpen, setAgentOpen] = useState(false);
   const [left, setLeft] = useState(236),
     [right, setRight] = useState(280),
     [bottom, setBottom] = useState(220);
@@ -1412,6 +1414,13 @@ export default function App() {
         >
           <PanelBottom size={16} />
         </Button>
+        <button
+          className="agent-toggle"
+          aria-expanded={agentOpen}
+          onClick={() => setAgentOpen(!agentOpen)}
+        >
+          Agent
+        </button>
       </div>
       <main className="workspace">
         <Hierarchy />
@@ -1429,7 +1438,13 @@ export default function App() {
           )}
         </div>
         <div className="resize-handle right-handle" onPointerDown={(e) => resize(e, 'right')} />
-        <Inspector />
+        {!agentOpen && <Inspector />}
+        <AgentPanel
+          open={agentOpen}
+          close={() => setAgentOpen(false)}
+          ready={ready}
+          persist={persist}
+        />
       </main>
       <footer className="status-bar">
         <WebMCPBridge ready={ready} persist={persist} />

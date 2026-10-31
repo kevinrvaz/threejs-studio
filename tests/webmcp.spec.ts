@@ -129,3 +129,60 @@ test('the editor remains usable when WebMCP is unavailable', async ({ page }) =>
   await page.getByRole('button', { name: 'Cube PRIMITIVE', exact: true }).dblclick();
   await expect(page.getByLabel('Object name')).toHaveValue('Box');
 });
+
+test('agent deletion of selected objects keeps the viewport alive through undo and subsequent edits', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('./');
+  await expect(page.getByText('WebMCP · 18 tools')).toBeVisible();
+  const created = await call(page, 'studio_create_objects', {
+    objects: [
+      { kind: 'box', name: 'Delete regression cube' },
+      { kind: 'sphere', name: 'Delete regression sphere' },
+    ],
+  });
+  const ids = created.data.result.map((n: { id: string }) => n.id);
+  await call(page, 'studio_select_objects', { ids });
+  const deleted = await call(page, 'studio_organize_objects', { action: 'delete', ids });
+  expect(deleted.data.ok).toBe(true);
+  await expect(page.getByText('Delete regression cube', { exact: true })).toHaveCount(0);
+  expect((await call(page, 'studio_get_scene')).data.result.selectedIds).toEqual([]);
+  await call(page, 'studio_history', { action: 'undo' });
+  await expect(page.getByText('Delete regression cube', { exact: true })).toBeVisible();
+  await call(page, 'studio_history', { action: 'redo' });
+  await expect(page.getByText('Delete regression cube', { exact: true })).toHaveCount(0);
+  const next = await call(page, 'studio_create_objects', {
+    objects: [{ kind: 'box', name: 'After deletion' }],
+  });
+  expect(next.data.ok).toBe(true);
+  await expect(page.getByLabel('Object name')).toHaveValue('After deletion');
+  expect(errors).toEqual([]);
+});
+
+test('wheel zoom redraws an idle viewport in perspective and orthographic modes', async ({
+  page,
+}) => {
+  await page.goto('./');
+  await expect(page.getByText('WebMCP · 18 tools')).toBeVisible();
+  await expect(page.getByText('All changes saved')).toBeVisible();
+  const canvas = page.locator('.viewport canvas');
+  for (const orthographic of [false, true]) {
+    await call(page, 'studio_set_view', { orthographic });
+    // Wait for the demand-rendered frame and any initial orbit damping to settle.
+    await page.waitForTimeout(700);
+    const before = await canvas.screenshot();
+    const bounds = (await canvas.boundingBox())!;
+    await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+    await page.mouse.wheel(0, -450);
+    await expect
+      .poll(async () => (await canvas.screenshot()).equals(before), { timeout: 3000 })
+      .toBe(false);
+    const zoomed = await canvas.screenshot();
+    await page.mouse.wheel(0, 450);
+    await expect
+      .poll(async () => (await canvas.screenshot()).equals(zoomed), { timeout: 3000 })
+      .toBe(false);
+  }
+});

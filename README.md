@@ -122,3 +122,37 @@ console.log(JSON.parse(response.content[0].text));
 ```
 
 `npm run test:e2e` enables native WebMCP in Chromium and tests discovery, agent-to-UI updates, shared undo, invalid input, storage, and downloads against the production build at a GitHub Pages-style subpath.
+
+### In-studio modelling agent
+
+Click **Agent** in the toolbar to open the right side panel. Configure the gateway
+URL (`TFY_GATEWAY_BASE_URL`), API key (`TFY_API_KEY`) and exact model slug
+(`TFY_MODEL`) before chatting. Defaults are `https://stranger-builds.truefoundry.cloud`
+and `tfy-managed/gpt-6-astra`; the key is always blank. A host URL is expanded to
+`/api/llm/v1/responses`; a full `/api/llm` gateway base is also accepted.
+
+This is a bring-your-own-key browser client. Credentials and conversation stay in
+memory, never in local/session storage or project archives. Reloading or opening
+Agent settings clears the key and chat. Prompts and tool results (including scene
+information) go to the configured gateway. Gateway CORS must allow the studio's
+origin and Authorization/Content-Type headers. Shared service credentials should
+instead live behind an authenticated server proxy; do not embed them in a build.
+
+The panel shares the standalone agent's modelling instructions and calls the same
+18 validated handlers exposed through WebMCP. It controls the current tab directly,
+works without native WebMCP support, and uses the editor's undo history. `CDP_URL`
+and `STUDIO_URL` remain settings for the standalone CLI only. Delete and project
+replacement tools request approval. Stop cancels pending requests and further tool
+execution; completed edits remain undoable. Runs default to 100 tool rounds (configurable from 1 to 500 in setup) and a
+30-minute time limit. The panel header keeps a manual **Stop agent** button visible
+throughout each run, including network waits and approval prompts. The first chat request verifies gateway credentials; configuration alone
+makes no model request. HTTP/network failures appear in the panel.
+
+Attach reference images in the Agent composer with **Attach images**, drag and
+ drop, or paste. PNG, JPEG and WebP are supported (up to four per message, 8 MB
+ each, 20 MB combined, 25 megapixels per image). Preview or remove images before
+ sending. A text prompt is optional: image-only messages request an editable 3D
+ scene based on the references. Images are sent to the configured gateway as
+ vision inputs and kept only in the in-memory conversation. Use a vision-capable
+ model. Generated scenes approximate the visible layout and appearance; this is
+ not a photogrammetry or exact mesh reconstruction pipeline.
