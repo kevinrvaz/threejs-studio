@@ -42,6 +42,3 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   };
 }
 
-export function responsesEndpoint(gatewayBaseUrl: string) {
-  return `${gatewayBaseUrl}/responses`;
-}

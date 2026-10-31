@@ -1,4 +1,5 @@
-import { responsesEndpoint, type Config } from './config.js';
+import { TrueFoundryClient } from 'truefoundry-sdk';
+import type { Config } from './config.js';
 import { MODELLING_INSTRUCTIONS } from './prompt.js';
 import type { WebMCPTool } from './webmcp.js';
 
@@ -20,15 +21,23 @@ type InputItem =
   | { type: 'function_call_output'; call_id: string; output: string };
 
 export class TrueFoundryResponsesClient {
-  constructor(private readonly config: Config) {}
+  private readonly client: TrueFoundryClient;
+
+  constructor(private readonly config: Config) {
+    this.client = new TrueFoundryClient({
+      baseUrl: config.gatewayBaseUrl,
+      apiKey: config.apiKey,
+      headers: { 'X-TFY-METADATA': JSON.stringify({ application: 'threejs-modelling-agent' }) },
+    });
+  }
 
   async create(input: InputItem[], tools: WebMCPTool[], previousResponseId?: string): Promise<ModelResponse> {
-    const response = await fetch(responsesEndpoint(this.config.gatewayBaseUrl), {
+    // The SDK's custom fetch preserves its authentication, retry, timeout, and logging behavior
+    // while reaching the Gateway's OpenAI-compatible endpoint.
+    const response = await this.client.fetch('/v1/responses', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${this.config.apiKey}`,
         'Content-Type': 'application/json',
-        'X-TFY-METADATA': JSON.stringify({ application: 'threejs-modelling-agent' }),
       },
       body: JSON.stringify({
         model: this.config.model,
