@@ -1,6 +1,6 @@
 # Three.js Modelling Agent
 
-An isolated TypeScript terminal agent for the Studio tab. It uses a TrueFoundry AI Gateway Responses endpoint to call a GPT-6 Astra route and executes only the tab's registered WebMCP tools.
+An isolated TypeScript terminal agent for the Studio tab. It uses the [`truefoundry-sdk`](https://www.npmjs.com/package/truefoundry-sdk) client and its authenticated custom-fetch facility to call a TrueFoundry AI Gateway Responses endpoint for a GPT-6 Astra route, then executes only the tab's registered WebMCP tools.
 
 It does not modify the Studio source or expose an HTTP endpoint. It attaches to a browser you start locally through Chrome DevTools Protocol (CDP).
 
@@ -13,7 +13,7 @@ npm install
 cp .env.example .env
 ```
 
-Set the values in `.env` in your shell or preferred secret manager. Never commit `.env`. `TFY_GATEWAY_BASE_URL` must include the gateway's `/v1` segment, and `TFY_MODEL` must be the exact model slug available in your TrueFoundry account (for example, `openai/gpt-6-astra`).
+Set the values in `.env` in your shell or preferred secret manager. Never commit `.env`. `TFY_GATEWAY_BASE_URL` is the Gateway origin (the agent appends `/v1/responses` through the SDK), and `TFY_MODEL` must be the exact model slug available in your TrueFoundry account (for example, `openai/gpt-6-astra`).
 
 Start Chrome with WebMCP and remote debugging enabled, then open the Studio URL configured as `STUDIO_URL`:
 
