@@ -13,7 +13,7 @@ npm install
 cp .env.example .env
 ```
 
-Set the values in `.env` in your shell or preferred secret manager. Never commit `.env`. `TFY_GATEWAY_BASE_URL` is the Gateway origin (the agent appends `/v1/responses` through the SDK), and `TFY_MODEL` must be the exact model slug available in your TrueFoundry account (for example, `openai/gpt-6-astra`).
+Set the values in `.env` in your shell or preferred secret manager. Never commit `.env`. `TFY_GATEWAY_BASE_URL` may be the TrueFoundry control-plane host or the full Gateway URL ending in `/api/llm`; the agent normalizes the former and calls `/v1/responses` through the SDK. `TFY_MODEL` must be the exact model slug available in your TrueFoundry account (for example, `openai/gpt-6-astra`).
 
 Start Chrome with WebMCP and remote debugging enabled, then open the Studio URL configured as `STUDIO_URL`:
 
@@ -23,10 +23,9 @@ google-chrome --remote-debugging-port=9222 --enable-features=WebMCP
 
 On some Chromium versions, also enable the WebMCP testing flag described in the Studio README. Confirm the Studio status bar says that its WebMCP tools are connected.
 
-Load the environment variables and start the agent:
+Start the agent. The `start` script loads this package's `.env` automatically:
 
 ```sh
-set -a; source .env; set +a
 npm run start
 ```
 

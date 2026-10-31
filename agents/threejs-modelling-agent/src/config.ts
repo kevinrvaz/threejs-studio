@@ -24,6 +24,17 @@ function validUrl(value: string, name: string) {
   }
 }
 
+function gatewayBaseUrl(value: string) {
+  const parsed = new URL(validUrl(value, 'TFY_GATEWAY_BASE_URL'));
+  const path = parsed.pathname.replace(/\/$/, '');
+  // A TrueFoundry control-plane hostname exposes the OpenAI-compatible Gateway
+  // below /api/llm. Accept both the host and the fully copied Gateway URL.
+  if (!path) parsed.pathname = '/api/llm';
+  else if (!path.endsWith('/api/llm'))
+    throw new Error('TFY_GATEWAY_BASE_URL must be the control-plane host or end with /api/llm.');
+  return parsed.toString().replace(/\/$/, '');
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const requestedEffort = (env.AGENT_REASONING_EFFORT ?? 'high') as Config['reasoningEffort'];
   if (!effort.has(requestedEffort))
@@ -32,7 +43,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   if (!Number.isInteger(maxToolIterations) || maxToolIterations < 1 || maxToolIterations > 50)
     throw new Error('AGENT_MAX_TOOL_ITERATIONS must be an integer between 1 and 50.');
   return {
-    gatewayBaseUrl: validUrl(required(env, 'TFY_GATEWAY_BASE_URL'), 'TFY_GATEWAY_BASE_URL'),
+    gatewayBaseUrl: gatewayBaseUrl(required(env, 'TFY_GATEWAY_BASE_URL')),
     apiKey: required(env, 'TFY_API_KEY'),
     model: required(env, 'TFY_MODEL'),
     cdpUrl: validUrl(required(env, 'CDP_URL'), 'CDP_URL'),
